@@ -1,0 +1,15 @@
+
+John Smith
+SSN: 123-45-6789
+
+Address:
+123 Main Street
+New York, NY 10001
+
+Phone: (212) 555-1234
+Email: john.smith@example.com
+
+Driver License: D1234567
+Policy Number: POL-987654321
+
+Credit Card: 4111 1111 1111 1111

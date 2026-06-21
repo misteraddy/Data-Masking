@@ -1,0 +1,14 @@
+
+[PERSON_1]
+SSN: [SSN_2]
+
+Address:
+[ADDRESS_1]CODE_1]
+
+Phone: [PHONE_1]
+Email: [EMAIL_1]
+
+Driver License: D1234567
+Policy Number: POL-[SSN_1]
+
+Credit Card: [CREDIT_CARD_1]

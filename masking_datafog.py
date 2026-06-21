@@ -1,88 +1,62 @@
 import os
+import datafog
 
-from datafog.services import TextService
+# Define directories
+INTERMEDIATE_DIR = "intermediate_folder"
+OUTPUT_DIR = "output"
 
-
-INPUT_DIR = "input"
-PROCESSED_DIR = "processed"
-
-os.makedirs(PROCESSED_DIR, exist_ok=True)
-
-service = TextService(engine="smart")
-
-
-def mask_pii(text):
-    result = service.annotate_text_sync(text)
-
-    entities = result.get("entities", []) if isinstance(result, dict) else []
-
-    masked_text = text
-    replacements = []
-
-    for entity in entities:
-        start = entity.get("start")
-        end = entity.get("end")
-
-        if start is None or end is None:
-            continue
-
-        label = (
-            entity.get("label")
-            or entity.get("type")
-            or entity.get("entity_type")
-            or "PII"
-        )
-
-        replacements.append(
-            (start, end, f"[{label}]")
-        )
-
-    for start, end, replacement in sorted(
-        replacements,
-        key=lambda x: x[0],
-        reverse=True
-    ):
-        masked_text = (
-            masked_text[:start]
-            + replacement
-            + masked_text[end:]
-        )
-
-    return masked_text
+# Create directories if they do not exist
+os.makedirs(INTERMEDIATE_DIR, exist_ok=True)
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 
-def process_file(file_name):
-    input_path = os.path.join(INPUT_DIR, file_name)
+def mask_pii(text: str) -> str:
+    """Uses DataFog's built-in sanitizer to mask PII items
 
-    with open(input_path, "r", encoding="utf-8", errors="ignore") as f:
-        text = f.read()
+    using the 'smart' pipeline engine.
+    """
+    if not text.strip():
+        return text
 
-    masked_text = mask_pii(text)
-
-    output_path = os.path.join(PROCESSED_DIR, file_name)
-
-    with open(output_path, "w", encoding="utf-8") as f:
-        f.write(masked_text)
-
-    print(f"Processed: {file_name}")
+    # DataFog's sanitize function handles the string replacement internally
+    return datafog.sanitize(text, engine="smart")
 
 
-def main():
-    files = [
-        file_name
-        for file_name in os.listdir(INPUT_DIR)
-        if file_name.endswith(".txt")
-    ]
+# -----------------------------
+# Example OCR Text for Testing
+# -----------------------------
+ocr_text = """
+John Smith
+SSN: 123-45-6789
 
-    if not files:
-        print("No txt files found.")
-        return
+Address:
+123 Main Street
+New York, NY 10001
 
-    for file_name in files:
-        process_file(file_name)
+Phone: (212) 555-1234
+Email: john.smith@example.com
 
-    print("All files processed successfully.")
+Driver License: D1234567
+Policy Number: POL-987654321
 
+Credit Card: 4111 1111 1111 1111
+"""
 
-if __name__ == "__main__":
-    main()
+# Save original OCR text to intermediate directory
+intermediate_file = os.path.join(INTERMEDIATE_DIR, "ocr_text.txt")
+with open(intermediate_file, "w", encoding="utf-8") as f:
+    f.write(ocr_text)
+
+# Mask the PII in the text
+masked_text = mask_pii(ocr_text)
+
+# Save the masked output to output directory
+output_file = os.path.join(OUTPUT_DIR, "masked_ocr_text.txt")
+with open(output_file, "w", encoding="utf-8") as f:
+    f.write(masked_text)
+
+# Print status and results
+print("Original OCR text saved to:", intermediate_file)
+print("Masked output saved to:", output_file)
+print("\n--- Masked Text Output ---\n")
+print(masked_text)
